@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Spendly{% endblock %}
+
+{% block content %}
+<div class="content-page">
+    <header class="content-header">
+        <h1 class="content-title">Privacy Policy</h1>
+        <p class="content-subtitle">Last updated: August 9, 2026</p>
+    </header>
+
+    <section class="content-section">
+        <h2 class="content-section-title">1. Data We Collect</h2>
+        <p class="content-body">We collect information that you provide directly to us when you create an account and use our service. This includes your email address, password, and the financial transaction data (amounts, categories, dates, and descriptions) that you enter into the application to track your expenses.</p>
+    </section>
+
+    <section class="content-section">
+        <h2 class="content-section-title">2. How We Use Your Data</h2>
+        <p class="content-body">Your data is used exclusively to provide the personal finance tracking service. Specifically, we use your information to:
+        <ul style="margin-top: 1rem; margin-left: 1.5rem; color: var(--ink-soft);">
+            <li>Maintain your user account and authentication.</li>
+            <li>Generate spending reports and category breakdowns.</li>
+            <li>Provide a personalized financial overview of your transactions.</li>
+        </ul>
+        </p>
+    </section>
+
+    <section class="content-section">
+        <h2 class="content-section-title">3. Data Storage</h2>
+        <p class="content-body">We store your data securely on our servers. We implement industry-standard security measures to protect your information from unauthorized access. Your financial data is stored in a way that ensures you have full control over your records.</p>
+    </section>
+
+    <section class="content-section">
+        <h2 class="content-section-title">4. Third Party Services</h2>
+        <p class="content-body">Spendly does not sell, trade, or otherwise transfer your personally identifiable information to third parties. We do not use third-party tracking cookies or analytics providers that compromise your privacy.</p>
+    </section>
+
+    <section class="content-section">
+        <h2 class="content-section-title">5. Contact Us</h2>
+        <p class="content-body">If you have any questions about this Privacy Policy or the handling of your data, please contact us at privacy@spendly.example.com.</p>
+    </section>
+
+    <footer class="content-footer">
+        <a href="{{ url_for('landing') }}" class="link-back">← Back to Home</a>
+    </footer>
+</div>
+{% endblock %}
