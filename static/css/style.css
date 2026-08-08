@@ -528,3 +528,64 @@ a { color: inherit; text-decoration: none; }
     .nav-links a:not(.nav-cta) { display: none; }
     .hero { padding: 3rem 1rem 2rem; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Content Pages (Terms, Privacy, etc.)                                */
+/* ------------------------------------------------------------------ */
+
+.content-page {
+    max-width: 800px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+}
+
+.content-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.content-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.content-subtitle {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+}
+
+.content-section {
+    margin-bottom: 3rem;
+}
+
+.content-section-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.content-body {
+    color: var(--ink-soft);
+    line-height: 1.8;
+}
+
+.content-footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.link-back {
+    color: var(--accent);
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.link-back:hover {
+    color: var(--ink);
+    text-decoration: underline;
+}
