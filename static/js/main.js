@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
     const openBtn = document.getElementById('open-demo');
     const closeBtn = document.getElementById('close-demo');
     const modal = document.getElementById('demo-modal');
