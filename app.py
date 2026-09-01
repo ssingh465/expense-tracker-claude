@@ -27,7 +27,7 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if "user_id" in session:
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "POST":
         name = request.form.get("name")
@@ -60,7 +60,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if "user_id" in session:
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "POST":
         email = request.form.get("email")
@@ -80,7 +80,7 @@ def login():
         session.clear()
         session["user_id"] = user["id"]
         flash(f"Welcome back, {user['name']}!", "success")
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     return render_template("login.html")
 
@@ -110,7 +110,45 @@ def privacy():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if "user_id" not in session:
+        flash("Please log in to view your profile.", "error")
+        return redirect(url_for("login"))
+
+    # Hardcoded data for UI design phase
+    user_data = {
+        "name": "Alex Rivera",
+        "email": "alex.rivera@example.com",
+        "joined_date": "October 2023",
+        "initials": "AR"
+    }
+
+    summary_stats = [
+        {"label": "Total Spent", "value": "$2,450.00", "icon": "wallet"},
+        {"label": "Transactions", "value": "42", "icon": "arrow-down-right"},
+        {"label": "Top Category", "value": "Dining", "icon": "utensils"},
+    ]
+
+    recent_transactions = [
+        {"date": "2024-08-28", "description": "Whole Foods Market", "category": "Groceries", "amount": -84.20},
+        {"date": "2024-08-27", "description": "Uber Trip", "category": "Transport", "amount": -22.50},
+        {"date": "2024-08-25", "description": "Netflix Subscription", "category": "Entertainment", "amount": -15.99},
+        {"date": "2024-08-22", "description": "Starbucks Coffee", "category": "Dining", "amount": -6.75},
+    ]
+
+    category_breakdown = [
+        {"name": "Dining", "total": 620.00, "percentage": 25, "class": "cat-dining"},
+        {"name": "Groceries", "total": 540.00, "percentage": 22, "class": "cat-groceries"},
+        {"name": "Transport", "total": 310.00, "percentage": 13, "class": "cat-transport"},
+        {"name": "Entertainment", "total": 280.00, "percentage": 11, "class": "cat-entertainment"},
+    ]
+
+    return render_template(
+        "profile.html",
+        user=user_data,
+        stats=summary_stats,
+        transactions=recent_transactions,
+        categories=category_breakdown
+    )
 
 
 @app.route("/expenses/add")
