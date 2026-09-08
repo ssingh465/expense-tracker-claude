@@ -9,6 +9,87 @@
     gap: 2.5rem;
 }
 
+/* Filter Bar */
+.filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-presets {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--paper-card);
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+}
+
+.preset-btn.active {
+    background: var(--accent);
+    color: var(--paper-card);
+    border-color: var(--accent);
+}
+
+.filter-custom {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-input-group label {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-weight: 500;
+}
+
+.date-input-group input {
+    padding: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--paper-card);
+}
+
+.apply-btn {
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: var(--paper-card);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.apply-btn:hover {
+    opacity: 0.9;
+}
+
 /* User Info Card */
 .profile-header {
     background: var(--paper-card);
@@ -181,10 +262,13 @@
     font-weight: 500;
 }
 
-.badge-dining { background: #fdf3e3; color: #c17f24; }
-.badge-groceries { background: #e8f0eb; color: #1a472a; }
+.badge-food { background: #e8f0eb; color: #1a472a; }
 .badge-transport { background: #fdf3e3; color: #c17f24; }
+.badge-bills { background: #eef2ff; color: #4338ca; }
+.badge-health { background: #fef2f2; color: #b91c1c; }
 .badge-entertainment { background: #fdecea; color: #c0392b; }
+.badge-shopping { background: #faf5ff; color: #7e22ce; }
+.badge-other { background: #f3f4f6; color: #374151; }
 
 /* Category Breakdown */
 .cat-breakdown {
