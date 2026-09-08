@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from datetime import datetime, date, timedelta
 
 from database.db import get_db, init_db, seed_db, get_user_by_email
 from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
+from database.utils import validate_date_range, get_date_presets
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
@@ -14,6 +16,12 @@ app.secret_key = "spendly-dev-secret-key"
 with app.app_context():
     init_db()
     seed_db()
+
+@app.teardown_appcontext
+def close_db(error):
+    db = getattr(g, 'db', None)
+    if db is not None:
+        db.close()
 
 
 # ------------------------------------------------------------------ #
@@ -115,6 +123,20 @@ def profile():
         flash("Please log in to view your profile.", "error")
         return redirect(url_for("login"))
 
+    # --- Date Range Filtering ---
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+
+    validated_from, validated_to, error = validate_date_range(date_from, date_to)
+    if error:
+        flash(error, "error")
+        # Fallback to unfiltered view
+        date_from = None
+        date_to = None
+
+    # Compute presets for the UI
+    presets = get_date_presets()
+
     # Fetch real user data from database
     user_info = get_user_by_id(session["user_id"])
 
@@ -129,16 +151,16 @@ def profile():
         "initials": (user_info["name"][0] + user_info["name"].split(' ')[-1][0]).upper() if len(user_info["name"]) > 1 else "U"
     }
 
-    stats = get_summary_stats(session["user_id"])
+    stats = get_summary_stats(session["user_id"], validated_from, validated_to)
     summary_stats = [
         {"label": "Total Spent", "value": f"₹{stats['total_spent']:.2f}", "icon": "wallet"},
         {"label": "Transactions", "value": str(stats['transaction_count']), "icon": "arrow-down-right"},
         {"label": "Top Category", "value": stats['top_category'], "icon": "utensils"},
     ]
 
-    recent_transactions = get_recent_transactions(session["user_id"])
+    recent_transactions = get_recent_transactions(session["user_id"], date_from=validated_from, date_to=validated_to)
 
-    breakdown_data = get_category_breakdown(session["user_id"])
+    breakdown_data = get_category_breakdown(session["user_id"], validated_from, validated_to)
     category_breakdown = [
         {"name": cat["name"], "total": cat["amount"], "percentage": cat["pct"], "class": f"cat-{cat['name'].lower()}"}
         for cat in breakdown_data
@@ -149,7 +171,10 @@ def profile():
         user=user_data,
         stats=summary_stats,
         transactions=recent_transactions,
-        categories=category_breakdown
+        categories=category_breakdown,
+        presets=presets,
+        active_from=validated_from,
+        active_to=validated_to
     )
 
 

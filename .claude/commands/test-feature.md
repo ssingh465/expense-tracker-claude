@@ -26,7 +26,8 @@ following context:
   - `app.py`
   - `database/` directory
 - Output test file to create:
-  `tests/test_$ARGUMENTS.py`
+  `tests/test_<sanitized-spec-name>.py`
+  (Derive the filename by removing the leading number and hyphen from `$ARGUMENTS` and replacing all remaining hyphens with underscores. e.g., `07-group-expenses-to-category` $\rightarrow$ `tests/test_group_expenses_to_category.py`)
 - Instruction: Write tests based on what the spec says 
   the feature SHOULD do. Do NOT derive test logic from 
   reading the implementation. Cover happy paths, edge 
@@ -44,7 +45,8 @@ Once test-writer has finished, invoke the
 context:
 
 - Test file to execute:
-  `tests/test_$ARGUMENTS.py`
+  `tests/test_<sanitized-spec-name>.py`
+  (Use the same naming convention as in Step 1)
 - Spec file for context:
   `.claude/specs/$ARGUMENTS.md`
 - Source files to analyze against when diagnosing 
@@ -52,7 +54,8 @@ context:
   - `app.py`
   - `database/` directory
 - Run command:
-  `python -m pytest tests/test_$ARGUMENTS.py -v`
+  `python -m pytest tests/test_<sanitized-spec-name>.py -v`
+  (Use the same naming convention as in Step 1)
 - Instruction: Run ONLY the specified test file. Do 
   NOT run the full test suite. Analyze any failures by 
   cross-referencing the test code, the spec, and the 
@@ -64,7 +67,8 @@ context:
 - Do NOT start Step 2 until Step 1 is fully complete
 - Do NOT attempt to fix any code regardless of what 
   the test results show
-- Do NOT run any tests beyond `tests/test_$ARGUMENTS.py`
+- Do NOT run any tests beyond `tests/test_<sanitized-spec-name>.py`
+  (Use the same naming convention as in Step 1)
 - If test-writer reports it could not write 
   the test file, stop and report the reason — do NOT 
   proceed to Step 2
