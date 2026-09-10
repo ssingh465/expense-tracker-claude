@@ -121,6 +121,8 @@ def create_user(name, email, password_hash):
 
 
 def get_user_by_email(email):
+
+
     """Look up a user by email.
 
     Returns a sqlite3.Row on success, or None if not found.

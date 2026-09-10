@@ -6,6 +6,24 @@ without exposing SQLite internals to the route handlers.
 
 from database.db import get_db
 from datetime import datetime
+import sqlite3
+
+
+def create_expense(user_id, amount, category, date, description):
+    """Insert a new expense into the database.
+
+    Returns True on success, False on failure.
+    """
+    conn = get_db()
+    try:
+        with conn:
+            conn.execute(
+                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                (user_id, amount, category, date, description),
+            )
+        return True
+    except sqlite3.Error:
+        return False
 
 
 def _apply_date_filter(query, params, date_from, date_to):

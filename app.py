@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from datetime import datetime, date, timedelta
 
 from database.db import get_db, init_db, seed_db, get_user_by_email
-from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
-from database.utils import validate_date_range, get_date_presets
+from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown, create_expense
+from database.utils import validate_date_range, get_date_presets, validate_expense_data
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
@@ -186,9 +186,35 @@ def analytics():
     return render_template("analytics.html")
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if "user_id" not in session:
+        flash("Please log in to add an expense.", "error")
+        return redirect(url_for("login"))
+
+    today = date.today().isoformat()
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount")
+        category = request.form.get("category")
+        date_str = request.form.get("date")
+        description = request.form.get("description", "").strip()
+
+        is_valid, error, amount = validate_expense_data(amount_str, category, date_str, description)
+
+        if not is_valid:
+            flash(error, "error")
+            return render_template("add_expense.html", today=today)
+
+        if create_expense(session["user_id"], amount, category, date_str, description):
+            flash("Expense added successfully!", "success")
+            return redirect(url_for("profile"))
+        else:
+            flash("An error occurred while saving the expense.", "error")
+            return render_template("add_expense.html", today=today)
+
+    return render_template("add_expense.html", today=today)
+
 
 
 @app.route("/expenses/<int:id>/edit")

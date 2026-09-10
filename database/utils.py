@@ -1,5 +1,8 @@
 from datetime import datetime, date, timedelta
 
+VALID_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+
+
 def validate_date_range(date_from, date_to):
     """
     Validates that dates are in YYYY-MM-DD format and that start date is before end date.
@@ -24,6 +27,7 @@ def validate_date_range(date_from, date_to):
         return None, None, "Start date must be before end date."
 
     return validated_from, validated_to, None
+
 
 def get_date_presets():
     """
@@ -51,3 +55,34 @@ def get_date_presets():
         "last_3m": (last_3m_start, last_3m_end),
         "last_6m": (last_6m_start, last_6m_end),
     }
+
+
+def validate_expense_data(amount_str, category, date_str, description):
+    """
+    Validates expense form data.
+
+    Returns:
+        (is_valid, error_message, validated_amount)
+    """
+    if not all([amount_str, category, date_str]):
+        return False, "Amount, category, and date are required.", None
+
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            return False, "Please enter a valid positive amount.", None
+    except (ValueError, TypeError):
+        return False, "Please enter a valid positive amount.", None
+
+    if category not in VALID_CATEGORIES:
+        return False, "Invalid category selected.", None
+
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return False, "Please enter a valid date.", None
+
+    if description and len(description) > 200:
+        return False, "Description must be 200 characters or less.", None
+
+    return True, None, amount
