@@ -23,6 +23,7 @@ from database.queries import (
     update_expense,
 )
 from database.utils import (
+    VALID_CATEGORIES,
     get_date_presets,
     validate_date_range,
     validate_expense_data,
