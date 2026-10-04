@@ -15,6 +15,7 @@ from flask import (
 from database.db import get_user_by_email, init_db, seed_db
 from database.queries import (
     create_expense,
+    delete_expense,
     get_category_breakdown,
     get_expense_by_id,
     get_recent_transactions,
@@ -320,9 +321,23 @@ def edit_expense(id):
     )
 
 
-@app.route("/expenses/<int:id>/delete")
-def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
+def delete_expense_route(id):
+    if "user_id" not in session:
+        flash("Please log in to delete your expense.", "error")
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    expense = get_expense_by_id(id, user_id)
+    if not expense:
+        abort(404)
+
+    if delete_expense(id, user_id):
+        flash("Expense deleted successfully!", "success")
+    else:
+        flash("An error occurred while deleting the expense.", "error")
+
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

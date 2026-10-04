@@ -672,8 +672,27 @@ a { color: inherit; text-decoration: none; }
     text-decoration: underline;
 }
 
+.btn-delete {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+    margin-left: 0.5rem;
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: var(--paper);
+}
+
 /* ------------------------------------------------------------------ */
 /* Modals                                                               */
+
 /* ------------------------------------------------------------------ */
 
 .modal-overlay {
