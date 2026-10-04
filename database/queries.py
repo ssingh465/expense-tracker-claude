@@ -26,6 +26,36 @@ def create_expense(user_id, amount, category, date, description):
         return False
 
 
+def get_expense_by_id(expense_id, user_id):
+    """Fetch a single expense by ID, ensuring it belongs to the given user.
+
+    Returns a dict with the expense data, or None if not found or not owned.
+    """
+    conn = get_db()
+    row = conn.execute(
+        "SELECT id, amount, category, date, description FROM expenses WHERE id = ? AND user_id = ?",
+        (expense_id, user_id),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def update_expense(expense_id, user_id, amount, category, date, description):
+    """Update an existing expense, ensuring ownership.
+
+    Returns True on success, False on failure.
+    """
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? WHERE id = ? AND user_id = ?",
+                (amount, category, date, description, expense_id, user_id),
+            )
+            return cursor.rowcount > 0
+    except sqlite3.Error:
+        return False
+
+
 def _apply_date_filter(query, params, date_from, date_to):
     """Helper to append a date range filter to a SQL query."""
     if date_from and date_to:
@@ -103,11 +133,11 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
 def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
     """Fetch the most recent transactions for a user.
 
-    Returns a list of dicts with date, description, category, and amount,
+    Returns a list of dicts with id, date, description, category, and amount,
     ordered by date newest-first.
     """
     conn = get_db()
-    query = """SELECT date, description, category, amount
+    query = """SELECT id, date, description, category, amount
                FROM expenses
                WHERE user_id = ?"""
     params = [user_id]
