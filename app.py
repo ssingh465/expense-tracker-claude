@@ -1,9 +1,33 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
-from datetime import datetime, date, timedelta
+from datetime import date
 
-from database.db import get_db, init_db, seed_db, get_user_by_email
-from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown, create_expense
-from database.utils import validate_date_range, get_date_presets, validate_expense_data
+from flask import (
+    Flask,
+    abort,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+
+from database.db import get_user_by_email, init_db, seed_db
+from database.queries import (
+    create_expense,
+    get_category_breakdown,
+    get_expense_by_id,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+    update_expense,
+)
+from database.utils import (
+    VALID_CATEGORIES,
+    get_date_presets,
+    validate_date_range,
+    validate_expense_data,
+)
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
@@ -17,9 +41,10 @@ with app.app_context():
     init_db()
     seed_db()
 
+
 @app.teardown_appcontext
 def close_db(error):
-    db = getattr(g, 'db', None)
+    db = getattr(g, "db", None)
     if db is not None:
         db.close()
 
@@ -27,6 +52,7 @@ def close_db(error):
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/")
 def landing():
@@ -53,6 +79,7 @@ def register():
             return render_template("register.html")
 
         from werkzeug.security import generate_password_hash
+
         from database.db import create_user
 
         hashed_password = generate_password_hash(password)
@@ -80,6 +107,7 @@ def login():
             return render_template("login.html")
 
         from werkzeug.security import check_password_hash
+
         user = get_user_by_email(email)
 
         if user is None or not check_password_hash(user["password_hash"], password):
@@ -117,6 +145,7 @@ def privacy():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
+
 @app.route("/profile")
 def profile():
     if "user_id" not in session:
@@ -148,21 +177,40 @@ def profile():
         "name": user_info["name"],
         "email": user_info["email"],
         "joined_date": user_info["member_since"],
-        "initials": (user_info["name"][0] + user_info["name"].split(' ')[-1][0]).upper() if len(user_info["name"]) > 1 else "U"
+        "initials": (user_info["name"][0] + user_info["name"].split(" ")[-1][0]).upper()
+        if len(user_info["name"]) > 1
+        else "U",
     }
 
     stats = get_summary_stats(session["user_id"], validated_from, validated_to)
     summary_stats = [
-        {"label": "Total Spent", "value": f"₹{stats['total_spent']:.2f}", "icon": "wallet"},
-        {"label": "Transactions", "value": str(stats['transaction_count']), "icon": "arrow-down-right"},
-        {"label": "Top Category", "value": stats['top_category'], "icon": "utensils"},
+        {
+            "label": "Total Spent",
+            "value": f"₹{stats['total_spent']:.2f}",
+            "icon": "wallet",
+        },
+        {
+            "label": "Transactions",
+            "value": str(stats["transaction_count"]),
+            "icon": "arrow-down-right",
+        },
+        {"label": "Top Category", "value": stats["top_category"], "icon": "utensils"},
     ]
 
-    recent_transactions = get_recent_transactions(session["user_id"], date_from=validated_from, date_to=validated_to)
+    recent_transactions = get_recent_transactions(
+        session["user_id"], date_from=validated_from, date_to=validated_to
+    )
 
-    breakdown_data = get_category_breakdown(session["user_id"], validated_from, validated_to)
+    breakdown_data = get_category_breakdown(
+        session["user_id"], validated_from, validated_to
+    )
     category_breakdown = [
-        {"name": cat["name"], "total": cat["amount"], "percentage": cat["pct"], "class": f"cat-{cat['name'].lower()}"}
+        {
+            "name": cat["name"],
+            "total": cat["amount"],
+            "percentage": cat["pct"],
+            "class": f"cat-{cat['name'].lower()}",
+        }
         for cat in breakdown_data
     ]
 
@@ -174,7 +222,7 @@ def profile():
         categories=category_breakdown,
         presets=presets,
         active_from=validated_from,
-        active_to=validated_to
+        active_to=validated_to,
     )
 
 
@@ -200,26 +248,76 @@ def add_expense():
         date_str = request.form.get("date")
         description = request.form.get("description", "").strip()
 
-        is_valid, error, amount = validate_expense_data(amount_str, category, date_str, description)
+        is_valid, error, amount = validate_expense_data(
+            amount_str, category, date_str, description
+        )
 
         if not is_valid:
             flash(error, "error")
-            return render_template("add_expense.html", today=today)
+            return render_template(
+                "add_expense.html", today=today, categories=VALID_CATEGORIES
+            )
 
         if create_expense(session["user_id"], amount, category, date_str, description):
             flash("Expense added successfully!", "success")
             return redirect(url_for("profile"))
         else:
             flash("An error occurred while saving the expense.", "error")
-            return render_template("add_expense.html", today=today)
+            return render_template(
+                "add_expense.html", today=today, categories=VALID_CATEGORIES
+            )
 
-    return render_template("add_expense.html", today=today)
+    return render_template("add_expense.html", today=today, categories=VALID_CATEGORIES)
 
 
-
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    if "user_id" not in session:
+        flash("Please log in to edit your expense.", "error")
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    expense = get_expense_by_id(id, user_id)
+    if not expense:
+        abort(404)
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount")
+        category = request.form.get("category")
+        date_str = request.form.get("date")
+        description = request.form.get("description", "").strip()
+
+        is_valid, error, amount = validate_expense_data(
+            amount_str, category, date_str, description
+        )
+
+        if not is_valid:
+            flash(error, "error")
+            return render_template(
+                "edit_expense.html",
+                expense={
+                    "id": id,
+                    "amount": amount_str,
+                    "category": category,
+                    "date": date_str,
+                    "description": description,
+                },
+                categories=VALID_CATEGORIES,
+            )
+
+        if update_expense(id, user_id, amount, category, date_str, description):
+            flash("Expense updated successfully!", "success")
+            return redirect(url_for("profile"))
+        else:
+            flash("An error occurred while updating the expense.", "error")
+            return render_template(
+                "edit_expense.html", expense=expense, categories=VALID_CATEGORIES
+            )
+
+    # GET handler
+    return render_template(
+        "edit_expense.html", expense=expense, categories=VALID_CATEGORIES
+    )
 
 
 @app.route("/expenses/<int:id>/delete")
