@@ -10,7 +10,6 @@ import sqlite3
 from flask import current_app, g
 from werkzeug.security import generate_password_hash
 
-
 # Resolve the DB file to the project root (one level above this package)
 # so it lives alongside ``app.py`` regardless of the working directory.
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,9 +21,9 @@ def get_db():
 
     Caches the connection in flask.g to support in-memory databases.
     """
-    if 'db' not in g:
+    if "db" not in g:
         # Use the database path from the Flask config if available, otherwise fallback to DB_PATH.
-        db_path = current_app.config.get('DATABASE', DB_PATH) if current_app else DB_PATH
+        db_path = current_app.config.get("DATABASE", DB_PATH) if current_app else DB_PATH
         g.db = sqlite3.connect(db_path)
         g.db.row_factory = sqlite3.Row
         # SQLite disables FK enforcement by default; enable it per-connection.
@@ -87,14 +86,14 @@ def seed_db():
         # 8 expenses covering all 7 fixed categories, with one repeat so
         # every category appears at least once.
         expenses = [
-            (45.50,  "Food",          "2026-08-02", "Weekly groceries",                user_id),
-            (12.00,  "Transport",     "2026-08-03", "Bus pass",                        user_id),
-            (89.99,  "Bills",         "2026-08-05", "Electricity bill",                user_id),
-            (32.75,  "Health",        "2026-08-07", "Pharmacy",                        user_id),
-            (60.00,  "Entertainment", "2026-08-10", "Cinema with friends",             user_id),
-            (24.30,  "Shopping",      "2026-08-12", "New t-shirt",                     user_id),
-            (15.00,  "Other",         "2026-08-14", "Misc household supplies",         user_id),
-            (18.20,  "Food",          "2026-08-16", "Lunch out",                       user_id),
+            (45.50, "Food", "2026-08-02", "Weekly groceries", user_id),
+            (12.00, "Transport", "2026-08-03", "Bus pass", user_id),
+            (89.99, "Bills", "2026-08-05", "Electricity bill", user_id),
+            (32.75, "Health", "2026-08-07", "Pharmacy", user_id),
+            (60.00, "Entertainment", "2026-08-10", "Cinema with friends", user_id),
+            (24.30, "Shopping", "2026-08-12", "New t-shirt", user_id),
+            (15.00, "Other", "2026-08-14", "Misc household supplies", user_id),
+            (18.20, "Food", "2026-08-16", "Lunch out", user_id),
         ]
         conn.executemany(
             """INSERT INTO expenses (amount, category, date, description, user_id)
@@ -121,8 +120,6 @@ def create_user(name, email, password_hash):
 
 
 def get_user_by_email(email):
-
-
     """Look up a user by email.
 
     Returns a sqlite3.Row on success, or None if not found.
@@ -132,4 +129,3 @@ def get_user_by_email(email):
         "SELECT id, name, email, password_hash FROM users WHERE email = ?",
         (email,),
     ).fetchone()
-

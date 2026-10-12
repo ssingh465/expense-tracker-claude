@@ -19,7 +19,8 @@ def create_expense(user_id, amount, category, date, description):
     try:
         with conn:
             conn.execute(
-                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO expenses (user_id, amount, category, date, description) \
+                    VALUES (?, ?, ?, ?, ?)",
                 (user_id, amount, category, date, description),
             )
         return True
@@ -49,7 +50,8 @@ def update_expense(expense_id, user_id, amount, category, date, description):
     try:
         with conn:
             cursor = conn.execute(
-                "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? WHERE id = ? AND user_id = ?",
+                "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? \
+                    WHERE id = ? AND user_id = ?",
                 (amount, category, date, description, expense_id, user_id),
             )
             return cursor.rowcount > 0
@@ -113,9 +115,7 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
     """
     conn = get_db()
     # Base query
-    query = (
-        "SELECT category as name, SUM(amount) as amount FROM expenses WHERE user_id = ?"
-    )
+    query = "SELECT category as name, SUM(amount) as amount FROM expenses WHERE user_id = ?"
     params = [user_id]
 
     query, params = _apply_date_filter(query, params, date_from, date_to)
@@ -128,9 +128,7 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
 
     total_spending = sum(row["amount"] for row in rows)
     if total_spending == 0:
-        return [
-            {"name": row["name"], "amount": row["amount"], "pct": 0} for row in rows
-        ]
+        return [{"name": row["name"], "amount": row["amount"], "pct": 0} for row in rows]
 
     # Calculate percentages
     breakdown = []
@@ -193,9 +191,7 @@ def get_summary_stats(user_id, date_from=None, date_to=None):
     query_top = "SELECT category FROM expenses WHERE user_id = ?"
     params_top = [user_id]
 
-    query_top, params_top = _apply_date_filter(
-        query_top, params_top, date_from, date_to
-    )
+    query_top, params_top = _apply_date_filter(query_top, params_top, date_from, date_to)
     query_top += " GROUP BY category ORDER BY SUM(amount) DESC LIMIT 1"
 
     top_cat_row = conn.execute(query_top, params_top).fetchone()

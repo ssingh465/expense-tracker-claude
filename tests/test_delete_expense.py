@@ -63,29 +63,24 @@ class TestDeleteExpense:
             user_id = user["id"]
 
             cursor = db.execute(
-                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO expenses (user_id, amount, category, date, description) \
+                    VALUES (?, ?, ?, ?, ?)",
                 (user_id, 50.0, "Food", "2023-10-01", "Lunch"),
             )
             expense_id = cursor.lastrowid
             db.commit()
 
         # 2. Action: Delete the expense
-        response = auth_client.post(
-            f"/expenses/{expense_id}/delete", follow_redirects=False
-        )
+        response = auth_client.post(f"/expenses/{expense_id}/delete", follow_redirects=False)
 
         # 3. Assertions
         assert response.status_code == 302, "Should redirect after successful deletion"
-        assert response.headers["Location"] == "/profile", (
-            "Should redirect to profile page"
-        )
+        assert response.headers["Location"] == "/profile", "Should redirect to profile page"
 
         # 4. DB Side Effect: Verify expense is gone
         with flask_app.app_context():
             db = get_db()
-            expense = db.execute(
-                "SELECT * FROM expenses WHERE id = ?", (expense_id,)
-            ).fetchone()
+            expense = db.execute("SELECT * FROM expenses WHERE id = ?", (expense_id,)).fetchone()
             assert expense is None, "Expense should be removed from the database"
 
     def test_delete_expense_unauthenticated(self, client):
@@ -116,7 +111,7 @@ class TestDeleteExpense:
         with flask_app.app_context():
             db = get_db()
             # User A (already created by auth_client)
-            user_a = db.execute("SELECT id FROM users LIMIT 1").fetchone()
+            _ = db.execute("SELECT id FROM users LIMIT 1").fetchone()
 
             # User B
             cursor_b = db.execute(
@@ -136,16 +131,12 @@ class TestDeleteExpense:
         # User A attempts to delete User B's expense
         response = auth_client.post(f"/expenses/{expense_id_b}/delete")
 
-        assert response.status_code == 404, (
-            "Should return 404 if user doesn't own the expense"
-        )
+        assert response.status_code == 404, "Should return 404 if user doesn't own the expense"
 
         # Verify expense still exists
         with flask_app.app_context():
             db = get_db()
-            expense = db.execute(
-                "SELECT * FROM expenses WHERE id = ?", (expense_id_b,)
-            ).fetchone()
+            expense = db.execute("SELECT * FROM expenses WHERE id = ?", (expense_id_b,)).fetchone()
             assert expense is not None, "Expense should NOT have been deleted"
 
     def test_delete_expense_invalid_id(self, auth_client):
