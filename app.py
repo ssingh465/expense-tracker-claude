@@ -15,6 +15,7 @@ from flask import (
 from database.db import get_user_by_email, init_db, seed_db
 from database.queries import (
     create_expense,
+    delete_expense,
     get_category_breakdown,
     get_expense_by_id,
     get_recent_transactions,
@@ -201,9 +202,7 @@ def profile():
         session["user_id"], date_from=validated_from, date_to=validated_to
     )
 
-    breakdown_data = get_category_breakdown(
-        session["user_id"], validated_from, validated_to
-    )
+    breakdown_data = get_category_breakdown(session["user_id"], validated_from, validated_to)
     category_breakdown = [
         {
             "name": cat["name"],
@@ -248,24 +247,18 @@ def add_expense():
         date_str = request.form.get("date")
         description = request.form.get("description", "").strip()
 
-        is_valid, error, amount = validate_expense_data(
-            amount_str, category, date_str, description
-        )
+        is_valid, error, amount = validate_expense_data(amount_str, category, date_str, description)
 
         if not is_valid:
             flash(error, "error")
-            return render_template(
-                "add_expense.html", today=today, categories=VALID_CATEGORIES
-            )
+            return render_template("add_expense.html", today=today, categories=VALID_CATEGORIES)
 
         if create_expense(session["user_id"], amount, category, date_str, description):
             flash("Expense added successfully!", "success")
             return redirect(url_for("profile"))
         else:
             flash("An error occurred while saving the expense.", "error")
-            return render_template(
-                "add_expense.html", today=today, categories=VALID_CATEGORIES
-            )
+            return render_template("add_expense.html", today=today, categories=VALID_CATEGORIES)
 
     return render_template("add_expense.html", today=today, categories=VALID_CATEGORIES)
 
@@ -287,9 +280,7 @@ def edit_expense(id):
         date_str = request.form.get("date")
         description = request.form.get("description", "").strip()
 
-        is_valid, error, amount = validate_expense_data(
-            amount_str, category, date_str, description
-        )
+        is_valid, error, amount = validate_expense_data(amount_str, category, date_str, description)
 
         if not is_valid:
             flash(error, "error")
@@ -315,14 +306,26 @@ def edit_expense(id):
             )
 
     # GET handler
-    return render_template(
-        "edit_expense.html", expense=expense, categories=VALID_CATEGORIES
-    )
+    return render_template("edit_expense.html", expense=expense, categories=VALID_CATEGORIES)
 
 
-@app.route("/expenses/<int:id>/delete")
-def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
+def delete_expense_route(id):
+    if "user_id" not in session:
+        flash("Please log in to delete your expense.", "error")
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    expense = get_expense_by_id(id, user_id)
+    if not expense:
+        abort(404)
+
+    if delete_expense(id, user_id):
+        flash("Expense deleted successfully!", "success")
+    else:
+        flash("An error occurred while deleting the expense.", "error")
+
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

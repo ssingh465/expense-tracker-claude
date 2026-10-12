@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 VALID_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
@@ -71,7 +71,7 @@ def validate_expense_data(amount_str, category, date_str, description):
         amount = float(amount_str)
         if amount <= 0:
             return False, "Please enter a valid positive amount.", None
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False, "Please enter a valid positive amount.", None
 
     if category not in VALID_CATEGORIES:
@@ -79,7 +79,7 @@ def validate_expense_data(amount_str, category, date_str, description):
 
     try:
         datetime.strptime(date_str, "%Y-%m-%d")
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False, "Please enter a valid date.", None
 
     if description and len(description) > 200:

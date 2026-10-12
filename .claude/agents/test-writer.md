@@ -33,27 +33,32 @@ import pytest
 from app import app as flask_app
 from database.db import init_db
 
+
 @pytest.fixture
 def app():
-    flask_app.config.update({
-        'TESTING': True,
-        'DATABASE': ':memory:',  # isolated in-memory DB per test
-        'SECRET_KEY': 'test-secret',
-        'WTF_CSRF_ENABLED': False,
-    })
+    flask_app.config.update(
+        {
+            "TESTING": True,
+            "DATABASE": ":memory:",  # isolated in-memory DB per test
+            "SECRET_KEY": "test-secret",
+            "WTF_CSRF_ENABLED": False,
+        }
+    )
     with flask_app.app_context():
         init_db()
         yield flask_app
+
 
 @pytest.fixture
 def client(app):
     return app.test_client()
 
+
 @pytest.fixture
 def auth_client(client):
     """A test client that is already logged in."""
-    client.post('/register', data={'username': 'testuser', 'password': 'testpass'})
-    client.post('/login', data={'username': 'testuser', 'password': 'testpass'})
+    client.post("/register", data={"username": "testuser", "password": "testpass"})
+    client.post("/login", data={"username": "testuser", "password": "testpass"})
     return client
 ```
 Adapt fixtures to the actual Spendly API as it exists — do not assume helpers beyond what the task describes.

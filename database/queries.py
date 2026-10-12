@@ -4,9 +4,10 @@ Provides clean, reusable functions for retrieving user and expense data
 without exposing SQLite internals to the route handlers.
 """
 
-from database.db import get_db
-from datetime import datetime
 import sqlite3
+from datetime import datetime
+
+from database.db import get_db
 
 
 def create_expense(user_id, amount, category, date, description):
@@ -18,7 +19,8 @@ def create_expense(user_id, amount, category, date, description):
     try:
         with conn:
             conn.execute(
-                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO expenses (user_id, amount, category, date, description) \
+                    VALUES (?, ?, ?, ?, ?)",
                 (user_id, amount, category, date, description),
             )
         return True
@@ -48,7 +50,8 @@ def update_expense(expense_id, user_id, amount, category, date, description):
     try:
         with conn:
             cursor = conn.execute(
-                "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? WHERE id = ? AND user_id = ?",
+                "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? \
+                    WHERE id = ? AND user_id = ?",
                 (amount, category, date, description, expense_id, user_id),
             )
             return cursor.rowcount > 0
@@ -62,6 +65,23 @@ def _apply_date_filter(query, params, date_from, date_to):
         query += " AND date BETWEEN ? AND ?"
         params.extend([date_from, date_to])
     return query, params
+
+
+def delete_expense(expense_id, user_id):
+    """Delete an expense, ensuring ownership.
+
+    Returns True on success, False on failure.
+    """
+    conn = get_db()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+                (expense_id, user_id),
+            )
+            return cursor.rowcount > 0
+    except sqlite3.Error:
+        return False
 
 
 def get_user_by_id(user_id):
@@ -114,11 +134,7 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
     breakdown = []
     for row in rows:
         pct = round((row["amount"] / total_spending) * 100)
-        breakdown.append({
-            "name": row["name"],
-            "amount": row["amount"],
-            "pct": pct
-        })
+        breakdown.append({"name": row["name"], "amount": row["amount"], "pct": pct})
 
     # Adjust for rounding errors
     current_sum = sum(item["pct"] for item in breakdown)
@@ -162,7 +178,9 @@ def get_summary_stats(user_id, date_from=None, date_to=None):
     query_totals = "SELECT SUM(amount), COUNT(*) FROM expenses WHERE user_id = ?"
     params_totals = [user_id]
 
-    query_totals, params_totals = _apply_date_filter(query_totals, params_totals, date_from, date_to)
+    query_totals, params_totals = _apply_date_filter(
+        query_totals, params_totals, date_from, date_to
+    )
 
     totals = conn.execute(query_totals, params_totals).fetchone()
 

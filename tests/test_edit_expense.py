@@ -49,13 +49,12 @@ def sample_expense(auth_client):
     with flask_app.app_context():
         db = get_db()
         # Get the logged-in user's ID from session if possible, or just query for the test user
-        user = db.execute(
-            "SELECT id FROM users WHERE email = ?", ("test@example.com",)
-        ).fetchone()
+        user = db.execute("SELECT id FROM users WHERE email = ?", ("test@example.com",)).fetchone()
         user_id = user["id"]
 
         cursor = db.execute(
-            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO expenses (user_id, amount, category, date, description) \
+                VALUES (?, ?, ?, ?, ?)",
             (user_id, 50.0, "Food", "2026-10-01", "Initial Expense"),
         )
         db.commit()
@@ -98,7 +97,8 @@ class TestEditExpense:
             other_user_id = user["id"]
 
             cursor = db.execute(
-                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO expenses (user_id, amount, category, date, description) \
+                    VALUES (?, ?, ?, ?, ?)",
                 (other_user_id, 20.0, "Transport", "2026-10-01", "Other User Expense"),
             )
             db.commit()
@@ -115,9 +115,7 @@ class TestEditExpense:
             "date": "2026-10-02",
             "description": "Updated Expense",
         }
-        response = auth_client.post(
-            f"/expenses/{sample_expense}/edit", data=update_data
-        )
+        response = auth_client.post(f"/expenses/{sample_expense}/edit", data=update_data)
 
         assert response.status_code == 302
         assert "/profile" in response.location
@@ -196,15 +194,13 @@ class TestEditExpense:
         self, auth_client, sample_expense, invalid_data, error_msg
     ):
         """Invalid inputs should re-render the form with an error message."""
-        response = auth_client.post(
-            f"/expenses/{sample_expense}/edit", data=invalid_data
-        )
+        response = auth_client.post(f"/expenses/{sample_expense}/edit", data=invalid_data)
 
         assert response.status_code == 200
         assert b"Save Changes" in response.data
         # The spec says "display error message", we check if it's present (generic check)
         # We also verify that submitted values are retained in the form
-        for key, value in invalid_data.items():
+        for _, value in invalid_data.items():
             if value:
                 assert value.encode() in response.data
 
@@ -216,9 +212,7 @@ class TestEditExpense:
             "date": "2026-10-01",
             "description": "   ",  # whitespace
         }
-        response = auth_client.post(
-            f"/expenses/{sample_expense}/edit", data=update_data
-        )
+        response = auth_client.post(f"/expenses/{sample_expense}/edit", data=update_data)
         assert response.status_code == 302
 
         with flask_app.app_context():
@@ -247,7 +241,8 @@ class TestEditExpense:
             other_user_id = user["id"]
 
             cursor = db.execute(
-                "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO expenses (user_id, amount, category, date, description) \
+                    VALUES (?, ?, ?, ?, ?)",
                 (other_user_id, 20.0, "Transport", "2026-10-01", "Other User Expense"),
             )
             db.commit()
@@ -259,7 +254,5 @@ class TestEditExpense:
             "date": "2026-10-01",
             "description": "Hacker",
         }
-        response = auth_client.post(
-            f"/expenses/{other_expense_id}/edit", data=update_data
-        )
+        response = auth_client.post(f"/expenses/{other_expense_id}/edit", data=update_data)
         assert response.status_code == 404
